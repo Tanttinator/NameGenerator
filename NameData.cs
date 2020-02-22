@@ -30,25 +30,30 @@ namespace NameGenerator
         }
 
         /// <summary>
-        /// Generates a string distribution from a collection of strings.
+        /// Add all substring permutations of the given names to the distribution.
         /// </summary>
-        /// <param name="data"></param>
-        void GenerateDistribution(string[] data)
+        /// <param name="names"></param>
+        void GenerateDistribution(string[] names)
         {
             charDistribution = new Dictionary<string, List<string>>();
             charDistribution.Add("_start_", new List<string>());
-            foreach(string name in data)
+            foreach(string name in names)
             {
                 string lower = name.ToLower();
-                char[] chars = lower.ToCharArray();
-                for(int i = 0; i < chars.Length; i++)
+                char[] nameChars = lower.ToCharArray();
+
+                /**1. Loop through all characters in a name.
+                 * 2. Get all chunks of characters before the current character of length 1 until the start of the name.
+                 * 3. Repeat for chunks after this character.
+                 * 4. Add all combinations of 1 pre-chunk and 1 post-chunk to the distribution **/
+                for(int startIndex = 0; startIndex < nameChars.Length; startIndex++)
                 {
-                    string s_char = "";
-                    for(int j = 0; j < maxChunkSize; j++)
+                    string chunk = "";
+                    for(int chunkSize = 0; chunkSize < maxChunkSize; chunkSize++)
                     {
-                        if(i - j == -1)
+                        if(startIndex - chunkSize == -1)
                         {
-                            string[] next = GetNextChars(chars, 0);
+                            string[] next = GetNextChars(nameChars, 0);
 
                             foreach(string nextString in next)
                             {
@@ -58,17 +63,17 @@ namespace NameGenerator
                             continue;
                         }
 
-                        if(i - j >= 0)
+                        if(startIndex - chunkSize >= 0)
                         {
-                            s_char = chars[i - j].ToString() + s_char;
+                            chunk = nameChars[startIndex - chunkSize].ToString() + chunk;
 
-                            if (!charDistribution.ContainsKey(s_char))
-                                charDistribution.Add(s_char, new List<string>());
+                            if (!charDistribution.ContainsKey(chunk))
+                                charDistribution.Add(chunk, new List<string>());
 
-                            string[] next = GetNextChars(chars, i);
+                            string[] next = GetNextChars(nameChars, startIndex);
 
                             foreach (string nextString in next)
-                                charDistribution[s_char].Add(nextString);
+                                charDistribution[chunk].Add(nextString);
                         }
                     }
                 }
@@ -79,23 +84,23 @@ namespace NameGenerator
         /// Generates all substrings of string with a length from 1 to maxChunkSize starting from character i.
         /// </summary>
         /// <param name="word"></param>
-        /// <param name="i">Index of the first character.</param>
+        /// <param name="startIndex">Index of the first character.</param>
         /// <returns></returns>
-        string[] GetNextChars(char[] word, int i)
+        string[] GetNextChars(char[] word, int startIndex)
         {
-            string s_next = "";
+            string chunk = "";
             List<string> chars = new List<string>();
-            for(int j = 1; j <= maxChunkSize; j++)
+            for(int chunkSize = 1; chunkSize <= maxChunkSize; chunkSize++)
             {
-                if(i + j < word.Length)
+                if(startIndex + chunkSize < word.Length)
                 {
-                    s_next += word[i + j].ToString();
-                    chars.Add(s_next);
+                    chunk += word[startIndex + chunkSize].ToString();
+                    chars.Add(chunk);
                 }
-                if(i + j == word.Length)
+                if(startIndex + chunkSize == word.Length)
                 {
-                    s_next += "_end_";
-                    chars.Add(s_next);
+                    chunk += "_end_";
+                    chars.Add(chunk);
                     return chars.ToArray();
                 }
             }
@@ -116,11 +121,11 @@ namespace NameGenerator
             if(name == "")
                 next = Random("_start_");
 
-            int i = 0;
+            int tries = 0;
 
             string nextTry;
 
-            while((name.Length < minLength || (next.Length < 5 || next.Substring(next.Length - 5) != "_end_")) && i < 1000)
+            while((name.Length < minLength || (next.Length < 5 || next.Substring(next.Length - 5) != "_end_")) && tries < 1000)
             {
                 if(next.Length < 5 || next.Substring(next.Length - 5) != "_end_")
                 {
@@ -132,7 +137,7 @@ namespace NameGenerator
                     break;
                 }
                 next = nextTry;
-                i++;
+                tries++;
             }
 
             if (next.Length >= 5 && next.Substring(next.Length - 5) == "_end_")
@@ -149,8 +154,9 @@ namespace NameGenerator
         {
             for(int i = 0; i < text.Length; i++)
             {
-                if (charDistribution.ContainsKey(text.Substring(i)))
-                    return charDistribution[text.Substring(i)][UnityEngine.Random.Range(0, charDistribution[text.Substring(i)].Count - 1)];
+                string chunk = text.Substring(i);
+                if (charDistribution.ContainsKey(chunk))
+                    return charDistribution[chunk][UnityEngine.Random.Range(0, charDistribution[chunk].Count - 1)];
             }
             return null;
         }

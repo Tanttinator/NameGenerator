@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1d7bdb308404d9542ae06abec2aeaf87, type: 3}
   m_Name: AnglicSurname
   m_EditorClassIdentifier: 
-  source: {fileID: 0}
+  source: {fileID: 4900000, guid: 7afbe2fc46a10b94fb998296048da8cb, type: 3}
   separator: 10
   maxChunkSize: 8
   minLength: 3
